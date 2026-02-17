@@ -4,7 +4,9 @@
 # Apple Relay（ChatGPT 扩展必需）
 DOMAIN-SUFFIX,apple-relay.apple.com
 DOMAIN-SUFFIX,apple-relay.cloudflare.com
-DOMAIN-KEYWORD,apple-relay# Apple Intelligence 核心服务
+DOMAIN-KEYWORD,apple-relay
+
+# Apple Intelligence 核心服务
 DOMAIN-SUFFIX,apple-intelligence.apple.com
 DOMAIN-SUFFIX,intelligence.apple.com
 DOMAIN-SUFFIX,ai.apple.com
