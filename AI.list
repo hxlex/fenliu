@@ -28,7 +28,7 @@ DOMAIN-KEYWORD,gemini
 
 # Microsoft Copilot
 DOMAIN-SUFFIX,copilot.microsoft.com
-DOMAIN-SUFFIX,bing.com/chat
+DOMAIN-SUFFIX,bing.com
 DOMAIN-SUFFIX,edgeservices.bing.com
 DOMAIN-SUFFIX,sydney.bing.com
 DOMAIN-KEYWORD,copilot
