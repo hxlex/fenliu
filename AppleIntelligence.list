@@ -1,0 +1,56 @@
+# Apple Intelligence 规则列表
+# Apple Intelligence 需要特定地区节点（台湾、美国等）
+# 更新时间: 2026-02-17
+
+# Apple Intelligence 核心服务
+DOMAIN-SUFFIX,apple-intelligence.apple.com
+DOMAIN-SUFFIX,intelligence.apple.com
+DOMAIN-SUFFIX,ai.apple.com
+DOMAIN-SUFFIX,siri-intelligence.apple.com
+
+# Apple ML 服务
+DOMAIN-SUFFIX,ml.apple.com
+DOMAIN-SUFFIX,mlcore.apple.com
+DOMAIN-SUFFIX,ml-api.apple.com
+
+# Siri 相关（Apple Intelligence 集成）
+DOMAIN-SUFFIX,siri.apple.com
+DOMAIN-SUFFIX,guzzoni.apple.com
+DOMAIN-SUFFIX,smoot.apple.com
+
+# Apple 设备上的 AI 功能
+DOMAIN-SUFFIX,api.apple-cloudkit.com
+DOMAIN-SUFFIX,api-glb-sea.smoot.apple.com
+DOMAIN-SUFFIX,api-glb-aps.smoot.apple.com
+
+# iCloud Private Relay (可能需要特定地区)
+DOMAIN-SUFFIX,mask.icloud.com
+DOMAIN-SUFFIX,mask-api.icloud.com
+DOMAIN-SUFFIX,mask-h2.icloud.com
+
+# Apple 搜索服务
+DOMAIN-SUFFIX,api.apple.com
+DOMAIN-SUFFIX,api-edge.apple.com
+DOMAIN-SUFFIX,api-glb.apple.com
+
+# Apple 语音识别
+DOMAIN-SUFFIX,dictation.apple.com
+DOMAIN-SUFFIX,api-dictation.apple.com
+
+# Apple 图像识别
+DOMAIN-SUFFIX,vision.apple.com
+DOMAIN-SUFFIX,photos-api.apple.com
+
+# Apple 翻译服务
+DOMAIN-SUFFIX,translate.apple.com
+DOMAIN-SUFFIX,api-translate.apple.com
+
+# Apple 建议和预测
+DOMAIN-SUFFIX,suggestions.apple.com
+DOMAIN-SUFFIX,api-suggestions.apple.com
+
+# Apple 通用 AI 服务
+DOMAIN-KEYWORD,apple-intelligence
+DOMAIN-KEYWORD,siri-intelligence
+DOMAIN-KEYWORD,apple.ai
+DOMAIN-KEYWORD,apple-ml
