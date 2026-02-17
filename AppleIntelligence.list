@@ -1,8 +1,10 @@
 # Apple Intelligence 规则列表
 # Apple Intelligence 需要特定地区节点（台湾、美国等）
 # 更新时间: 2026-02-17
-
-# Apple Intelligence 核心服务
+# Apple Relay（ChatGPT 扩展必需）
+DOMAIN-SUFFIX,apple-relay.apple.com
+DOMAIN-SUFFIX,apple-relay.cloudflare.com
+DOMAIN-KEYWORD,apple-relay# Apple Intelligence 核心服务
 DOMAIN-SUFFIX,apple-intelligence.apple.com
 DOMAIN-SUFFIX,intelligence.apple.com
 DOMAIN-SUFFIX,ai.apple.com
