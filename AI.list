@@ -1,0 +1,248 @@
+# AI 软件规则列表
+# 包含所有主流 AI 服务
+# 更新时间: 2026-02-17
+
+# ChatGPT
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,openaiapi-site.azureedge.net
+DOMAIN-SUFFIX,openaicom.imgix.net
+DOMAIN-SUFFIX,openaicomproductionae4b.blob.core.windows.net
+DOMAIN-KEYWORD,openai
+
+# Claude (Anthropic)
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-KEYWORD,anthropic
+DOMAIN-KEYWORD,claude
+
+# Google AI (Gemini, Bard)
+DOMAIN-SUFFIX,gemini.google.com
+DOMAIN-SUFFIX,bard.google.com
+DOMAIN-SUFFIX,ai.google.dev
+DOMAIN-SUFFIX,makersuite.google.com
+DOMAIN-SUFFIX,generativelanguage.googleapis.com
+DOMAIN-KEYWORD,gemini
+
+# Microsoft Copilot
+DOMAIN-SUFFIX,copilot.microsoft.com
+DOMAIN-SUFFIX,bing.com/chat
+DOMAIN-SUFFIX,edgeservices.bing.com
+DOMAIN-SUFFIX,sydney.bing.com
+DOMAIN-KEYWORD,copilot
+
+# Midjourney
+DOMAIN-SUFFIX,midjourney.com
+DOMAIN-SUFFIX,cdn.midjourney.com
+DOMAIN-KEYWORD,midjourney
+
+# Stable Diffusion
+DOMAIN-SUFFIX,stability.ai
+DOMAIN-SUFFIX,stabilityai.us
+DOMAIN-SUFFIX,dreamstudio.ai
+DOMAIN-KEYWORD,stablediffusion
+
+# Perplexity AI
+DOMAIN-SUFFIX,perplexity.ai
+DOMAIN-KEYWORD,perplexity
+
+# Character.AI
+DOMAIN-SUFFIX,character.ai
+DOMAIN-SUFFIX,characterai.io
+DOMAIN-KEYWORD,character.ai
+
+# Poe (Quora)
+DOMAIN-SUFFIX,poe.com
+DOMAIN-KEYWORD,poe.com
+
+# Hugging Face
+DOMAIN-SUFFIX,huggingface.co
+DOMAIN-KEYWORD,huggingface
+
+# Notion AI
+DOMAIN-SUFFIX,notion.so
+DOMAIN-SUFFIX,notion.com
+DOMAIN-KEYWORD,notion
+
+# Jasper AI
+DOMAIN-SUFFIX,jasper.ai
+DOMAIN-KEYWORD,jasper
+
+# Copy.ai
+DOMAIN-SUFFIX,copy.ai
+DOMAIN-KEYWORD,copy.ai
+
+# Writesonic
+DOMAIN-SUFFIX,writesonic.com
+DOMAIN-KEYWORD,writesonic
+
+# Runway ML
+DOMAIN-SUFFIX,runwayml.com
+DOMAIN-KEYWORD,runway
+
+# Leonardo AI
+DOMAIN-SUFFIX,leonardo.ai
+DOMAIN-KEYWORD,leonardo
+
+# Civitai
+DOMAIN-SUFFIX,civitai.com
+DOMAIN-KEYWORD,civitai
+
+# DeepL (AI 翻译)
+DOMAIN-SUFFIX,deepl.com
+DOMAIN-SUFFIX,deepl.net
+DOMAIN-KEYWORD,deepl
+
+# Grammarly (AI 写作)
+DOMAIN-SUFFIX,grammarly.com
+DOMAIN-SUFFIX,grammarly.io
+DOMAIN-KEYWORD,grammarly
+
+# Quillbot
+DOMAIN-SUFFIX,quillbot.com
+DOMAIN-KEYWORD,quillbot
+
+# Replicate
+DOMAIN-SUFFIX,replicate.com
+DOMAIN-SUFFIX,replicate.delivery
+DOMAIN-KEYWORD,replicate
+
+# Cohere
+DOMAIN-SUFFIX,cohere.ai
+DOMAIN-SUFFIX,cohere.com
+DOMAIN-KEYWORD,cohere
+
+# AI21 Labs
+DOMAIN-SUFFIX,ai21.com
+DOMAIN-KEYWORD,ai21
+
+# You.com
+DOMAIN-SUFFIX,you.com
+DOMAIN-KEYWORD,you.com
+
+# Phind
+DOMAIN-SUFFIX,phind.com
+DOMAIN-KEYWORD,phind
+
+# Cursor (AI 编程)
+DOMAIN-SUFFIX,cursor.sh
+DOMAIN-SUFFIX,cursor.com
+DOMAIN-KEYWORD,cursor
+
+# GitHub Copilot
+DOMAIN-SUFFIX,copilot.github.com
+DOMAIN-SUFFIX,githubcopilot.com
+DOMAIN-KEYWORD,github.copilot
+
+# Codeium
+DOMAIN-SUFFIX,codeium.com
+DOMAIN-KEYWORD,codeium
+
+# Tabnine
+DOMAIN-SUFFIX,tabnine.com
+DOMAIN-KEYWORD,tabnine
+
+# Replit AI
+DOMAIN-SUFFIX,replit.com
+DOMAIN-KEYWORD,replit
+
+# Vercel AI
+DOMAIN-SUFFIX,vercel.ai
+DOMAIN-SUFFIX,sdk.vercel.ai
+DOMAIN-KEYWORD,vercel.ai
+
+# ElevenLabs (AI 语音)
+DOMAIN-SUFFIX,elevenlabs.io
+DOMAIN-SUFFIX,elevenlabs.com
+DOMAIN-KEYWORD,elevenlabs
+
+# Synthesia (AI 视频)
+DOMAIN-SUFFIX,synthesia.io
+DOMAIN-KEYWORD,synthesia
+
+# D-ID
+DOMAIN-SUFFIX,d-id.com
+DOMAIN-KEYWORD,d-id
+
+# Luma AI
+DOMAIN-SUFFIX,lumalabs.ai
+DOMAIN-KEYWORD,luma
+
+# Suno AI (AI 音乐)
+DOMAIN-SUFFIX,suno.ai
+DOMAIN-SUFFIX,suno.com
+DOMAIN-KEYWORD,suno
+
+# Udio (AI 音乐)
+DOMAIN-SUFFIX,udio.com
+DOMAIN-KEYWORD,udio
+
+# Recraft AI
+DOMAIN-SUFFIX,recraft.ai
+DOMAIN-KEYWORD,recraft
+
+# Ideogram
+DOMAIN-SUFFIX,ideogram.ai
+DOMAIN-KEYWORD,ideogram
+
+# Flux AI
+DOMAIN-SUFFIX,flux.ai
+DOMAIN-KEYWORD,flux.ai
+
+# Meta AI
+DOMAIN-SUFFIX,meta.ai
+DOMAIN-KEYWORD,meta.ai
+
+# xAI (Grok)
+DOMAIN-SUFFIX,x.ai
+DOMAIN-SUFFIX,grok.x.ai
+DOMAIN-KEYWORD,grok
+
+# Mistral AI
+DOMAIN-SUFFIX,mistral.ai
+DOMAIN-SUFFIX,chat.mistral.ai
+DOMAIN-KEYWORD,mistral
+
+# Inflection AI (Pi)
+DOMAIN-SUFFIX,inflection.ai
+DOMAIN-SUFFIX,pi.ai
+DOMAIN-KEYWORD,inflection
+
+# Anthropic Console
+DOMAIN-SUFFIX,console.anthropic.com
+DOMAIN-KEYWORD,anthropic.console
+
+# OpenRouter
+DOMAIN-SUFFIX,openrouter.ai
+DOMAIN-KEYWORD,openrouter
+
+# Together AI
+DOMAIN-SUFFIX,together.ai
+DOMAIN-SUFFIX,together.xyz
+DOMAIN-KEYWORD,together.ai
+
+# Fireworks AI
+DOMAIN-SUFFIX,fireworks.ai
+DOMAIN-KEYWORD,fireworks.ai
+
+# Groq
+DOMAIN-SUFFIX,groq.com
+DOMAIN-KEYWORD,groq
+
+# Anyscale
+DOMAIN-SUFFIX,anyscale.com
+DOMAIN-KEYWORD,anyscale
+
+# Baseten
+DOMAIN-SUFFIX,baseten.co
+DOMAIN-KEYWORD,baseten
+
+# Modal
+DOMAIN-SUFFIX,modal.com
+DOMAIN-KEYWORD,modal.com
+
+# Replicate API
+DOMAIN-SUFFIX,api.replicate.com
+DOMAIN-KEYWORD,replicate.api
