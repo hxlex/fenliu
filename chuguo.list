@@ -4,3 +4,6 @@
 # 守候机场
 DOMAIN-SUFFIX,sntp.hk
 DOMAIN-SUFFIX,sntp.uk
+
+# tinkr-wow
+DOMAIN-SUFFIX,tinkr.site
