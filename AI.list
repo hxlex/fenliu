@@ -198,14 +198,6 @@ DOMAIN-KEYWORD,flux.ai
 DOMAIN-SUFFIX,meta.ai
 DOMAIN-KEYWORD,meta.ai
 
-# xAI (Grok)
-DOMAIN-SUFFIX,grok.x.ai
-DOMAIN-KEYWORD,grok
-DOMAIN-SUFFIX,grok.com
-DOMAIN-SUFFIX,x.ai
-DOMAIN-SUFFIX,x.com
-DOMAIN-KEYWORD,xai
-
 # Mistral AI
 DOMAIN-SUFFIX,mistral.ai
 DOMAIN-SUFFIX,chat.mistral.ai
