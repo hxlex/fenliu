@@ -1,0 +1,10 @@
+payload:
+  # 出国规则 - 守候机场等需要代理访问的域名
+  # 更新时间: 2026-02-17
+
+  # 守候机场
+  - DOMAIN-SUFFIX,sntp.hk
+  - DOMAIN-SUFFIX,sntp.uk
+
+  # tinkr
+  - DOMAIN-SUFFIX,tinkr.site

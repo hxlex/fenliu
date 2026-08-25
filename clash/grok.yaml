@@ -1,0 +1,8 @@
+payload:
+  # xAI (Grok)
+  - DOMAIN-SUFFIX,grok.x.ai
+  - DOMAIN-KEYWORD,grok
+  - DOMAIN-SUFFIX,grok.com
+  - DOMAIN-SUFFIX,x.ai
+  - DOMAIN-SUFFIX,x.com
+  - DOMAIN-KEYWORD,xai
