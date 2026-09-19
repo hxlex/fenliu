@@ -1,0 +1,151 @@
+# ClashParty 完整配置 —— 节点 + hxlex/fenliu 分流规则
+# 直接导入，不需要再手改
+
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+unified-delay: true
+tcp-concurrent: true
+find-process-mode: strict
+global-client-fingerprint: chrome
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+dns:
+  enable: true
+  ipv6: false
+  listen: 0.0.0.0:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "+.139876.xyz"        # 节点域名，必须排除
+    - "*.lan"
+    - "+.local"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
+  proxy-server-nameserver:   # 专门解析节点域名，绕开 fake-ip
+    - https://223.5.5.5/dns-query
+    - https://120.53.53.53/dns-query
+
+proxies:
+
+  - name: "US-liuliu"
+    type: vless
+    server: liuliu.139876.xyz
+    port: 443
+    uuid: df18c0e9-2921-4fcb-ab00-ebaa9ad10964
+    network: tcp
+    udp: true
+    tls: true
+    flow: xtls-rprx-vision
+    servername: www.amazon.com
+    client-fingerprint: chrome
+    reality-opts:
+      public-key: nny5II0rMQ9415y98-tW_Y4WsUvpjVvBb8Erf2HTIRI
+      short-id: 2ef637dcea
+
+proxy-groups:
+  - name: PROXY
+    type: select
+    proxies:
+      - 自动选择
+      - "US-liuliu"
+      - DIRECT
+  - name: AI
+    type: select
+    proxies:
+      - PROXY
+      - "US-liuliu"
+      - DIRECT
+  - name: TikTok
+    type: select
+    proxies:
+      - PROXY
+      - "US-liuliu"
+      - DIRECT
+  - name: 社交媒体
+    type: select
+    proxies:
+      - PROXY
+      - "US-liuliu"
+      - DIRECT
+  - name: 自动选择
+    type: url-test
+    url: 'http://cp.cloudflare.com/generate_204'
+    interval: 300
+    tolerance: 50
+    proxies:
+      - "US-liuliu"
+
+rule-providers:
+  chuguo:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/chuguo.yaml
+    path: ./rules/chuguo.yaml
+  PrivateTracker:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/PrivateTracker.yaml
+    path: ./rules/PrivateTracker.yaml
+  AppleIntelligence:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/AppleIntelligence.yaml
+    path: ./rules/AppleIntelligence.yaml
+  grok:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/grok.yaml
+    path: ./rules/grok.yaml
+  AI:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/AI.yaml
+    path: ./rules/AI.yaml
+  TikTok:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/TikTok.yaml
+    path: ./rules/TikTok.yaml
+  SocialMedia:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/SocialMedia.yaml
+    path: ./rules/SocialMedia.yaml
+
+rules:
+  - DOMAIN-SUFFIX,139876.xyz,DIRECT      # 节点域名直连，防回环
+  - RULE-SET,chuguo,PROXY
+  - RULE-SET,PrivateTracker,DIRECT
+  - RULE-SET,AppleIntelligence,AI
+  - RULE-SET,grok,AI
+  - RULE-SET,AI,AI
+  - RULE-SET,TikTok,TikTok
+  - RULE-SET,SocialMedia,社交媒体
+  - GEOIP,LAN,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT
+  - MATCH,PROXY
