@@ -81,6 +81,10 @@ proxies:
     reality-opts:
       public-key: nny5II0rMQ9415y98-tW_Y4WsUvpjVvBb8Erf2HTIRI
       short-id: 2ef637dcea
+      # Xray-core v26.9.8+ 要求 ClientHello 带 X25519MLKEM768 key share，
+      # 否则握手被静默丢给 fallback，客户端表现为超时。
+      # 3x-ui 的 Clash 订阅会自动加这行，手写 yaml 必须自己补上。
+      support-x25519mlkem768: true
 
 proxy-groups:
   - name: PROXY

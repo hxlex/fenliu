@@ -1,6 +1,56 @@
 # ClashParty（Windows）一直超时 —— 排查与修复
 
-## 结论：原配置里有 4 个会直接导致「超时」的点
+## 真正的原因：Xray-core v26.9.8+ 的 ML-KEM 要求
+
+**现象**：QuantumultX 正常，ClashParty（mihomo 内核）连不上；3x-ui 3.7 时一切正常，升到 3.8x 就断。
+
+Xray-core **v26.9.8+** 的 REALITY 要求客户端的 ClientHello 里
+**`X25519MLKEM768` key share 必须排在可选的 `X25519` 之前**。
+mihomo 默认不发这个 key share，服务端就把握手**静默丢给 fallback 目标**——
+不报错、不断开，客户端只能一直等到超时。
+
+QuanX 用的是另一套 TLS 实现，不受影响，所以只有 ClashParty 挂。
+
+### 修复：yaml 里补一行
+
+```yaml
+reality-opts:
+  public-key: <你的 pbk>
+  short-id: <你的 sid>
+  support-x25519mlkem768: true   # ← 就是这一行
+client-fingerprint: chrome       # 必须是支持 ML-KEM 的指纹
+```
+
+3x-ui 生成的 **Clash 订阅**会自动带上这行
+（见 `internal/sub/clash_service.go:1135`），
+但 **`vless://` 分享链接不带**，所以照着链接手写 yaml 的人必然踩坑。
+
+相关 issue：
+- [3x-ui #6451](https://github.com/MHSanaei/3x-ui/issues/6451) — 为 Mihomo 订阅加 ML-KEM 开关
+- [3x-ui #6555](https://github.com/MHSanaei/3x-ui/issues/6555) — vless:// 链接里没有这个字段
+- [3x-ui #6583](https://github.com/MHSanaei/3x-ui/issues/6583) — v3.3 正常，v3.8 转 Clash 后超时
+
+### 另一个坑：minClientVer
+
+mihomo 上报的 REALITY 客户端版本**硬编码为 1.8.2**。
+Xray-core v26.7.11 ~ v26.9.7 的 `minClientVer` 默认下限是 `26.3.27`，会直接拒掉 mihomo。
+
+v26.9.8+ 留空时不再设默认下限，但**你之前保存过的值仍然生效**。
+去 3x-ui 入站 → REALITY 设置 → 把 **最小客户端版本** 清空或填 `1.0`。
+
+相关 issue：
+- [3x-ui #6568](https://github.com/MHSanaei/3x-ui/issues/6568) — 空 minClientVer 仍然挡住 Mihomo
+- [mihomo #3039](https://github.com/MetaCubeX/mihomo/issues/3039) — 客户端版本硬编码 1.8.2
+- [mihomo #3042](https://github.com/MetaCubeX/mihomo/issues/3042) — 26.7.x 认证失败，26.6.27 正常
+
+### 还要确认 ClashParty 够新
+
+`support-x25519mlkem768: true` 只是**开关**，不会给老指纹变出新能力。
+mihomo 需要 **uTLS v1.8.7+** 才真正支持 ML-KEM。ClashParty 太旧的话，加了也没用，得先升级。
+
+---
+
+## 配置里另外 4 个隐患（顺手一并修了）
 
 ### 1. `rule-providers` 从 `raw.githubusercontent.com` 下载（最可能的原因）
 内核启动时会**先下载全部 7 个规则集**才开始工作，这个下载是**直连**的（此时代理还没起来）。
