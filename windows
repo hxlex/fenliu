@@ -1,43 +1,72 @@
-# ClashParty 完整配置 —— 节点 + hxlex/fenliu 分流规则
-# 直接导入，不需要再手改
+# ClashParty / mihomo 完整配置（自包含版，无需联网下载规则）
+# 分流规则已全部内联，导入后即可使用；节点信息见 proxies 段
+# 来源规则：https://github.com/hxlex/fenliu
 
 mixed-port: 7890
 allow-lan: false
+bind-address: 127.0.0.1
 mode: rule
 log-level: info
+ipv6: false
 unified-delay: true
 tcp-concurrent: true
-find-process-mode: strict
+keep-alive-interval: 30
+# Windows 下查进程名需要管理员权限，strict 容易卡住连接，这里关掉
+find-process-mode: 'off'
 global-client-fingerprint: chrome
+external-controller: 127.0.0.1:9090
 
 profile:
   store-selected: true
-  store-fake-ip: true
+  # 关键：不要缓存 fake-ip。旧缓存会把节点域名记成 198.18.x.x，导致节点永远超时
+  store-fake-ip: false
+
+sniffer:
+  enable: true
+  override-destination: false
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - '+.139876.xyz'
 
 dns:
   enable: true
   ipv6: false
   listen: 0.0.0.0:1053
+  prefer-h3: false
+  respect-rules: false
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
-    - "+.139876.xyz"        # 节点域名，必须排除
-    - "*.lan"
-    - "+.local"
-    - "+.msftconnecttest.com"
-    - "+.msftncsi.com"
+    - '+.139876.xyz'          # 节点域名，必须排除
+    - '*.lan'
+    - '*.localdomain'
+    - '+.local'
+    - '+.msftconnecttest.com'
+    - '+.msftncsi.com'
+    - 'time.*.com'
+    - 'ntp.*.com'
+    - 'localhost.ptlogin2.qq.com'
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
+  # 明文 UDP 放前面：部分网络会拦截 DoH(443)，只写 DoH 会让所有解析超时
   nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
     - https://223.5.5.5/dns-query
-    - https://1.12.12.12/dns-query
-  proxy-server-nameserver:   # 专门解析节点域名，绕开 fake-ip
-    - https://223.5.5.5/dns-query
-    - https://120.53.53.53/dns-query
+  # 专门解析节点域名，绕开 fake-ip
+  proxy-server-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
 
 proxies:
-
   - name: "US-liuliu"
     type: vless
     server: liuliu.139876.xyz
@@ -83,69 +112,648 @@ proxy-groups:
     url: 'http://cp.cloudflare.com/generate_204'
     interval: 300
     tolerance: 50
+    timeout: 5000
+    lazy: true
     proxies:
       - "US-liuliu"
 
-rule-providers:
-  chuguo:
-    type: http
-    behavior: classical
-    format: yaml
-    interval: 86400
-    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/chuguo.yaml
-    path: ./rules/chuguo.yaml
-  PrivateTracker:
-    type: http
-    behavior: classical
-    format: yaml
-    interval: 86400
-    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/PrivateTracker.yaml
-    path: ./rules/PrivateTracker.yaml
-  AppleIntelligence:
-    type: http
-    behavior: classical
-    format: yaml
-    interval: 86400
-    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/AppleIntelligence.yaml
-    path: ./rules/AppleIntelligence.yaml
-  grok:
-    type: http
-    behavior: classical
-    format: yaml
-    interval: 86400
-    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/grok.yaml
-    path: ./rules/grok.yaml
-  AI:
-    type: http
-    behavior: classical
-    format: yaml
-    interval: 86400
-    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/AI.yaml
-    path: ./rules/AI.yaml
-  TikTok:
-    type: http
-    behavior: classical
-    format: yaml
-    interval: 86400
-    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/TikTok.yaml
-    path: ./rules/TikTok.yaml
-  SocialMedia:
-    type: http
-    behavior: classical
-    format: yaml
-    interval: 86400
-    url: https://raw.githubusercontent.com/hxlex/fenliu/main/clash/SocialMedia.yaml
-    path: ./rules/SocialMedia.yaml
-
 rules:
-  - DOMAIN-SUFFIX,139876.xyz,DIRECT      # 节点域名直连，防回环
-  - RULE-SET,chuguo,PROXY
-  - RULE-SET,PrivateTracker,DIRECT
-  - RULE-SET,AppleIntelligence,AI
-  - RULE-SET,grok,AI
-  - RULE-SET,AI,AI
-  - RULE-SET,TikTok,TikTok
-  - RULE-SET,SocialMedia,社交媒体
+  # 节点域名直连，防止回环
+  - DOMAIN-SUFFIX,139876.xyz,DIRECT
+  # Windows 网络连通性检测走直连，否则系统会一直提示"无 Internet 访问"
+  - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
+  - DOMAIN-SUFFIX,msftncsi.com,DIRECT
+
+  # ---------- 出国 / 机场（PROXY，共 3 条）----------
+  - DOMAIN-SUFFIX,sntp.hk,PROXY
+  - DOMAIN-SUFFIX,sntp.uk,PROXY
+  - DOMAIN-SUFFIX,tinkr.site,PROXY
+
+  # ---------- PT 站（直连，避免代理导致封号）（DIRECT，共 256 条）----------
+  - DOMAIN,cn2.tinkr.site,DIRECT
+  - DOMAIN,0123456789nonexistent.com,DIRECT
+  - DOMAIN,1337.abcvg.info,DIRECT
+  - DOMAIN,aboutbeautifulgallopinghorsesinthegreenpasture.online,DIRECT
+  - DOMAIN,admin.52ywp.com,DIRECT
+  - DOMAIN,bandito.byterunner.io,DIRECT
+  - DOMAIN,bt.okmp3.ru,DIRECT
+  - DOMAIN,bt.rer.lol,DIRECT
+  - DOMAIN,buny.uk,DIRECT
+  - DOMAIN,bvarf.tracker.sh,DIRECT
+  - DOMAIN,d40969.acod.regrucolo.ru,DIRECT
+  - DOMAIN,evan.im,DIRECT
+  - DOMAIN,exodus.desync.com,DIRECT
+  - DOMAIN,extracker.dahrkael.net,DIRECT
+  - DOMAIN,home.yxgz.club,DIRECT
+  - DOMAIN,ipv4.rer.lol,DIRECT
+  - DOMAIN,ipv4announce.sktorrent.eu,DIRECT
+  - DOMAIN,ipv6.rer.lol,DIRECT
+  - DOMAIN,jvavav.com,DIRECT
+  - DOMAIN,leet-tracker.moe,DIRECT
+  - DOMAIN,lucke.fenesisu.moe,DIRECT
+  - DOMAIN,martin-gebhardt.eu,DIRECT
+  - DOMAIN,node01.trackerstatus.live,DIRECT
+  - DOMAIN,node02.torrentonline.cc,DIRECT
+  - DOMAIN,ns575949.ip-51-222-82.net,DIRECT
+  - DOMAIN,nyaa.tracker.wf,DIRECT
+  - DOMAIN,open.acgtracker.com,DIRECT
+  - DOMAIN,open.demonii.com,DIRECT
+  - DOMAIN,open.demonoid.ch,DIRECT
+  - DOMAIN,open.dstud.io,DIRECT
+  - DOMAIN,open.stealth.si,DIRECT
+  - DOMAIN,open.tracker.cl,DIRECT
+  - DOMAIN,opentor.org,DIRECT
+  - DOMAIN,opentracker.io,DIRECT
+  - DOMAIN,p4p.arenabg.com,DIRECT
+  - DOMAIN,retracker.hotplug.ru,DIRECT
+  - DOMAIN,retracker.lanta.me,DIRECT
+  - DOMAIN,servandroidkino.ru,DIRECT
+  - DOMAIN,shahidrazi.online,DIRECT
+  - DOMAIN,share.hkg-fansub.info,DIRECT
+  - DOMAIN,t.213891.xyz,DIRECT
+  - DOMAIN,t.overflow.biz,DIRECT
+  - DOMAIN,torrent.tracker.durukanbal.com,DIRECT
+  - DOMAIN,torrentclub.online,DIRECT
+  - DOMAIN,torrentsmd.com,DIRECT
+  - DOMAIN,tr.abiir.top,DIRECT
+  - DOMAIN,tr.abir.ga,DIRECT
+  - DOMAIN,tr.highstar.shop,DIRECT
+  - DOMAIN,tr.kxmp.cf,DIRECT
+  - DOMAIN,tr.nyacat.pw,DIRECT
+  - DOMAIN,tr.zukizuki.org,DIRECT
+  - DOMAIN,tr4ck3r.duckdns.org,DIRECT
+  - DOMAIN,tracker-de-2.cutie.dating,DIRECT
+  - DOMAIN,tracker-udp.gbitt.info,DIRECT
+  - DOMAIN,tracker.1h.is,DIRECT
+  - DOMAIN,tracker.23794.top,DIRECT
+  - DOMAIN,tracker.alaskantf.com,DIRECT
+  - DOMAIN,tracker.bittor.pw,DIRECT
+  - DOMAIN,tracker.bluefrog.pw,DIRECT
+  - DOMAIN,tracker.breizh.pm,DIRECT
+  - DOMAIN,tracker.bt4g.com,DIRECT
+  - DOMAIN,tracker.corpscorp.online,DIRECT
+  - DOMAIN,tracker.darkness.services,DIRECT
+  - DOMAIN,tracker.dhitechnical.com,DIRECT
+  - DOMAIN,tracker.dler.com,DIRECT
+  - DOMAIN,tracker.dler.org,DIRECT
+  - DOMAIN,tracker.dmcomic.org,DIRECT
+  - DOMAIN,tracker.ducks.party,DIRECT
+  - DOMAIN,tracker.filemail.com,DIRECT
+  - DOMAIN,tracker.flatuslifir.is,DIRECT
+  - DOMAIN,tracker.fnix.net,DIRECT
+  - DOMAIN,tracker.foreverpirates.co,DIRECT
+  - DOMAIN,tracker.gcrenwp.top,DIRECT
+  - DOMAIN,tracker.ghostchu-services.top,DIRECT
+  - DOMAIN,tracker.gmi.gd,DIRECT
+  - DOMAIN,tracker.iochimari.moe,DIRECT
+  - DOMAIN,tracker.iperson.xyz,DIRECT
+  - DOMAIN,tracker.ipv6tracker.ru,DIRECT
+  - DOMAIN,tracker.ixuexi.click,DIRECT
+  - DOMAIN,tracker.kuroy.me,DIRECT
+  - DOMAIN,tracker.lintk.me,DIRECT
+  - DOMAIN,tracker.moeblog.cn,DIRECT
+  - DOMAIN,tracker.mywaifu.best,DIRECT
+  - DOMAIN,tracker.opentorrent.top,DIRECT
+  - DOMAIN,tracker.opentrackr.org,DIRECT
+  - DOMAIN,tracker.openwebtorrent.com,DIRECT
+  - DOMAIN,tracker.playground.ru,DIRECT
+  - DOMAIN,tracker.plx.im,DIRECT
+  - DOMAIN,tracker.pmman.tech,DIRECT
+  - DOMAIN,tracker.qu.ax,DIRECT
+  - DOMAIN,tracker.renfei.net,DIRECT
+  - DOMAIN,tracker.sbsub.com,DIRECT
+  - DOMAIN,tracker.skyts.net,DIRECT
+  - DOMAIN,tracker.srv00.com,DIRECT
+  - DOMAIN,tracker.t-1.org,DIRECT
+  - DOMAIN,tracker.theoks.net,DIRECT
+  - DOMAIN,tracker.therarbg.to,DIRECT
+  - DOMAIN,tracker.torrent.eu.org,DIRECT
+  - DOMAIN,tracker.torrust-demo.com,DIRECT
+  - DOMAIN,tracker.tritan.gg,DIRECT
+  - DOMAIN,tracker.tryhackx.org,DIRECT
+  - DOMAIN,tracker.tvunderground.org.ru,DIRECT
+  - DOMAIN,tracker.uraniumhexafluori.de,DIRECT
+  - DOMAIN,tracker.vanitycore.co,DIRECT
+  - DOMAIN,tracker.waaa.moe,DIRECT
+  - DOMAIN,tracker.wepzone.net,DIRECT
+  - DOMAIN,tracker.xiaoduola.xyz,DIRECT
+  - DOMAIN,tracker.xn--djrq4gl4hvoi.top,DIRECT
+  - DOMAIN,tracker.yume-hatsuyuki.moe,DIRECT
+  - DOMAIN,tracker.zhuqiy.com,DIRECT
+  - DOMAIN,tracker1.520.jp,DIRECT
+  - DOMAIN,tracker1.t-1.org,DIRECT
+  - DOMAIN,tracker2.dler.org,DIRECT
+  - DOMAIN,tracker2.itzmx.com,DIRECT
+  - DOMAIN,tracker3.itzmx.com,DIRECT
+  - DOMAIN,tracker3.t-1.org,DIRECT
+  - DOMAIN,tracker4.itzmx.com,DIRECT
+  - DOMAIN,udp.tracker.projectk.org,DIRECT
+  - DOMAIN,utracker.ghostchu-services.top,DIRECT
+  - DOMAIN,wepzone.net,DIRECT
+  - DOMAIN,www.all4nothin.net,DIRECT
+  - DOMAIN,www.genesis-sp.org,DIRECT
+  - DOMAIN,www.torrent.eu.org,DIRECT
+  - DOMAIN,www.torrentsnipe.info,DIRECT
+  - DOMAIN,www.wareztorrent.com,DIRECT
+  - DOMAIN-SUFFIX,1ptba.com,DIRECT
+  - DOMAIN-SUFFIX,2xfree.org,DIRECT
+  - DOMAIN-SUFFIX,52pt.site,DIRECT
+  - DOMAIN-SUFFIX,aidoru-online.me,DIRECT
+  - DOMAIN-SUFFIX,alpharatio.cc,DIRECT
+  - DOMAIN-SUFFIX,animebytes.tv,DIRECT
+  - DOMAIN-SUFFIX,animetorrents.me,DIRECT
+  - DOMAIN-SUFFIX,anthelion.me,DIRECT
+  - DOMAIN-SUFFIX,asiancinema.me,DIRECT
+  - DOMAIN-SUFFIX,audiences.me,DIRECT
+  - DOMAIN-SUFFIX,avgv.cc,DIRECT
+  - DOMAIN-SUFFIX,avistaz.to,DIRECT
+  - DOMAIN-SUFFIX,awesome-hd.me,DIRECT
+  - DOMAIN-SUFFIX,beitai.pt,DIRECT
+  - DOMAIN-SUFFIX,beyond-hd.me,DIRECT
+  - DOMAIN-SUFFIX,bibliotik.me,DIRECT
+  - DOMAIN-SUFFIX,bittorrent.com,DIRECT
+  - DOMAIN-SUFFIX,blutopia.cc,DIRECT
+  - DOMAIN-SUFFIX,broadcasthe.net,DIRECT
+  - DOMAIN-SUFFIX,bt.byr.cn,DIRECT
+  - DOMAIN-SUFFIX,bt.neu6.edu.cn,DIRECT
+  - DOMAIN-SUFFIX,btschool.club,DIRECT
+  - DOMAIN-SUFFIX,bwtorrents.tv,DIRECT
+  - DOMAIN-SUFFIX,byr.pt,DIRECT
+  - DOMAIN-SUFFIX,ccfbits.org,DIRECT
+  - DOMAIN-SUFFIX,cgpeers.com,DIRECT
+  - DOMAIN-SUFFIX,chdbits.co,DIRECT
+  - DOMAIN-SUFFIX,cinemageddon.net,DIRECT
+  - DOMAIN-SUFFIX,cinematik.net,DIRECT
+  - DOMAIN-SUFFIX,cinemaz.to,DIRECT
+  - DOMAIN-SUFFIX,classix-unlimited.co.uk,DIRECT
+  - DOMAIN-SUFFIX,concertos.live,DIRECT
+  - DOMAIN-SUFFIX,creditracker.net,DIRECT
+  - DOMAIN-SUFFIX,dicmusic.club,DIRECT
+  - DOMAIN-SUFFIX,discfan.net,DIRECT
+  - DOMAIN-SUFFIX,dxdhd.com,DIRECT
+  - DOMAIN-SUFFIX,eastgame.org,DIRECT
+  - DOMAIN-SUFFIX,empornium.me,DIRECT
+  - DOMAIN-SUFFIX,et8.org,DIRECT
+  - DOMAIN-SUFFIX,exoticaz.to,DIRECT
+  - DOMAIN-SUFFIX,extremlymtorrents.ws,DIRECT
+  - DOMAIN-SUFFIX,filelist.io,DIRECT
+  - DOMAIN-SUFFIX,gainbound.net,DIRECT
+  - DOMAIN-SUFFIX,gazellegames.net,DIRECT
+  - DOMAIN-SUFFIX,gfxpeers.net,DIRECT
+  - DOMAIN-SUFFIX,hd-space.org,DIRECT
+  - DOMAIN-SUFFIX,hd-torrents.org,DIRECT
+  - DOMAIN-SUFFIX,hd4.xyz,DIRECT
+  - DOMAIN-SUFFIX,hd4fans.org,DIRECT
+  - DOMAIN-SUFFIX,hdarea.co,DIRECT
+  - DOMAIN-SUFFIX,hdatmos.club,DIRECT
+  - DOMAIN-SUFFIX,hdbd.us,DIRECT
+  - DOMAIN-SUFFIX,hdbits.org,DIRECT
+  - DOMAIN-SUFFIX,hdchina.org,DIRECT
+  - DOMAIN-SUFFIX,hdcity.city,DIRECT
+  - DOMAIN-SUFFIX,hddolby.com,DIRECT
+  - DOMAIN-SUFFIX,hdfans.org,DIRECT
+  - DOMAIN-SUFFIX,hdhome.org,DIRECT
+  - DOMAIN-SUFFIX,hdpost.top,DIRECT
+  - DOMAIN-SUFFIX,hdroute.org,DIRECT
+  - DOMAIN-SUFFIX,hdsky.me,DIRECT
+  - DOMAIN-SUFFIX,hdstreet.club,DIRECT
+  - DOMAIN-SUFFIX,hdtime.org,DIRECT
+  - DOMAIN-SUFFIX,hdupt.com,DIRECT
+  - DOMAIN-SUFFIX,hdzone.me,DIRECT
+  - DOMAIN-SUFFIX,hhanclub.top,DIRECT
+  - DOMAIN-SUFFIX,hitpt.com,DIRECT
+  - DOMAIN-SUFFIX,hitpt.org,DIRECT
+  - DOMAIN-SUFFIX,hudbt.hust.edu.cn,DIRECT
+  - DOMAIN-SUFFIX,icetorrent.org,DIRECT
+  - DOMAIN-SUFFIX,iptorrents.com,DIRECT
+  - DOMAIN-SUFFIX,j99.info,DIRECT
+  - DOMAIN-SUFFIX,joyhd.net,DIRECT
+  - DOMAIN-SUFFIX,jpopsuki.eu,DIRECT
+  - DOMAIN-SUFFIX,kamept.com,DIRECT
+  - DOMAIN-SUFFIX,karagarga.in,DIRECT
+  - DOMAIN-SUFFIX,keepfrds.com,DIRECT
+  - DOMAIN-SUFFIX,landof.tv,DIRECT
+  - DOMAIN-SUFFIX,leaguehd.com,DIRECT
+  - DOMAIN-SUFFIX,lemonhd.org,DIRECT
+  - DOMAIN-SUFFIX,lztr.me,DIRECT
+  - DOMAIN-SUFFIX,m-team.cc,DIRECT
+  - DOMAIN-SUFFIX,madsrevolution.net,DIRECT
+  - DOMAIN-SUFFIX,moecat.best,DIRECT
+  - DOMAIN-SUFFIX,morethan.tv,DIRECT
+  - DOMAIN-SUFFIX,msg.vg,DIRECT
+  - DOMAIN-SUFFIX,myanonamouse.net,DIRECT
+  - DOMAIN-SUFFIX,nanyangpt.com,DIRECT
+  - DOMAIN-SUFFIX,ncore.cc,DIRECT
+  - DOMAIN-SUFFIX,nebulance.io,DIRECT
+  - DOMAIN-SUFFIX,nicept.net,DIRECT
+  - DOMAIN-SUFFIX,npupt.com,DIRECT
+  - DOMAIN-SUFFIX,nwsuaf6.edu.cn,DIRECT
+  - DOMAIN-SUFFIX,open.cd,DIRECT
+  - DOMAIN-SUFFIX,oppaiti.me,DIRECT
+  - DOMAIN-SUFFIX,orpheus.network,DIRECT
+  - DOMAIN-SUFFIX,ourbits.club,DIRECT
+  - DOMAIN-SUFFIX,passthepopcorn.me,DIRECT
+  - DOMAIN-SUFFIX,pornbits.net,DIRECT
+  - DOMAIN-SUFFIX,privatehd.to,DIRECT
+  - DOMAIN-SUFFIX,pterclub.com,DIRECT
+  - DOMAIN-SUFFIX,pthome.net,DIRECT
+  - DOMAIN-SUFFIX,ptsbao.club,DIRECT
+  - DOMAIN-SUFFIX,pttime.org,DIRECT
+  - DOMAIN-SUFFIX,pussytorrents.org,DIRECT
+  - DOMAIN-SUFFIX,qingwa.pro,DIRECT
+  - DOMAIN-SUFFIX,redacted.ch,DIRECT
+  - DOMAIN-SUFFIX,sdbits.org,DIRECT
+  - DOMAIN-SUFFIX,sharkpt.net,DIRECT
+  - DOMAIN-SUFFIX,sjtu.edu.cn,DIRECT
+  - DOMAIN-SUFFIX,skyey2.com,DIRECT
+  - DOMAIN-SUFFIX,soulvoice.club,DIRECT
+  - DOMAIN-SUFFIX,springsunday.net,DIRECT
+  - DOMAIN-SUFFIX,tju.pt,DIRECT
+  - DOMAIN-SUFFIX,tjupt.org,DIRECT
+  - DOMAIN-SUFFIX,torrentday.com,DIRECT
+  - DOMAIN-SUFFIX,torrentleech.org,DIRECT
+  - DOMAIN-SUFFIX,torrentseeds.org,DIRECT
+  - DOMAIN-SUFFIX,totheglory.im,DIRECT
+  - DOMAIN-SUFFIX,trontv.com,DIRECT
+  - DOMAIN-SUFFIX,u2.dmhy.org,DIRECT
+  - DOMAIN-SUFFIX,uhdbits.org,DIRECT
+  - DOMAIN-SUFFIX,xauat6.edu.cn,DIRECT
+  - DOMAIN-KEYWORD,announce,DIRECT
+  - DOMAIN-KEYWORD,chdbits,DIRECT
+  - DOMAIN-KEYWORD,m-team,DIRECT
+  - DOMAIN-KEYWORD,rousi,DIRECT
+  - DOMAIN-KEYWORD,013257,DIRECT
+  - DOMAIN-KEYWORD,cn2gias,DIRECT
+  - DOMAIN-KEYWORD,torrent,DIRECT
+  - DOMAIN-KEYWORD,tracter,DIRECT
+
+  # ---------- Apple Intelligence（AI，共 47 条）----------
+  - DOMAIN,guzzoni.apple.com,AI
+  - DOMAIN,mask-api.fe.apple-dns.net,AI
+  - DOMAIN,mask-api.icloud.com,AI
+  - DOMAIN,mask-t.apple-dns.net,AI
+  - DOMAIN,mask.apple-dns.net,AI
+  - DOMAIN-SUFFIX,smoot.apple.com,AI
+  - DOMAIN-SUFFIX,apple-relay.apple.com,AI
+  - DOMAIN-SUFFIX,apple-relay.cloudflare.com,AI
+  - DOMAIN-SUFFIX,apple-relay.fastly-edge.com,AI
+  - DOMAIN-SUFFIX,apple-relay.mask.apple-dns.net,AI
+  - DOMAIN-SUFFIX,cp4.cloudflare.com,AI
+  - DOMAIN-SUFFIX,gspe1-ssl.ls.apple.com,AI
+  - DOMAIN-SUFFIX,gateway.icloud.com,AI
+  - DOMAIN-SUFFIX,ls.apple.com,AI
+  - DOMAIN-SUFFIX,mask-h2.icloud.com,AI
+  - DOMAIN-SUFFIX,mask.icloud.com,AI
+  - DOMAIN-SUFFIX,apps.mzstatic.com,AI
+  - DOMAIN-KEYWORD,siri,AI
+  - DOMAIN-KEYWORD,apple-relay,AI
+  - DOMAIN-SUFFIX,apple-intelligence.apple.com,AI
+  - DOMAIN-SUFFIX,intelligence.apple.com,AI
+  - DOMAIN-SUFFIX,ai.apple.com,AI
+  - DOMAIN-SUFFIX,siri-intelligence.apple.com,AI
+  - DOMAIN-SUFFIX,ml.apple.com,AI
+  - DOMAIN-SUFFIX,mlcore.apple.com,AI
+  - DOMAIN-SUFFIX,ml-api.apple.com,AI
+  - DOMAIN-SUFFIX,siri.apple.com,AI
+  - DOMAIN-SUFFIX,guzzoni.apple.com,AI
+  - DOMAIN-SUFFIX,api.apple-cloudkit.com,AI
+  - DOMAIN-SUFFIX,api-glb-sea.smoot.apple.com,AI
+  - DOMAIN-SUFFIX,api-glb-aps.smoot.apple.com,AI
+  - DOMAIN-SUFFIX,mask-api.icloud.com,AI
+  - DOMAIN-SUFFIX,api.apple.com,AI
+  - DOMAIN-SUFFIX,api-edge.apple.com,AI
+  - DOMAIN-SUFFIX,api-glb.apple.com,AI
+  - DOMAIN-SUFFIX,dictation.apple.com,AI
+  - DOMAIN-SUFFIX,api-dictation.apple.com,AI
+  - DOMAIN-SUFFIX,vision.apple.com,AI
+  - DOMAIN-SUFFIX,photos-api.apple.com,AI
+  - DOMAIN-SUFFIX,translate.apple.com,AI
+  - DOMAIN-SUFFIX,api-translate.apple.com,AI
+  - DOMAIN-SUFFIX,suggestions.apple.com,AI
+  - DOMAIN-SUFFIX,api-suggestions.apple.com,AI
+  - DOMAIN-KEYWORD,apple-intelligence,AI
+  - DOMAIN-KEYWORD,siri-intelligence,AI
+  - DOMAIN-KEYWORD,apple.ai,AI
+  - DOMAIN-KEYWORD,apple-ml,AI
+
+  # ---------- Grok / xAI（AI，共 6 条）----------
+  - DOMAIN-SUFFIX,grok.x.ai,AI
+  - DOMAIN-KEYWORD,grok,AI
+  - DOMAIN-SUFFIX,grok.com,AI
+  - DOMAIN-SUFFIX,x.ai,AI
+  - DOMAIN-SUFFIX,x.com,AI
+  - DOMAIN-KEYWORD,xai,AI
+
+  # ---------- AI 服务（AI，共 155 条）----------
+  - DOMAIN-SUFFIX,openai.com,AI
+  - DOMAIN-SUFFIX,chatgpt.com,AI
+  - DOMAIN-SUFFIX,oaistatic.com,AI
+  - DOMAIN-SUFFIX,oaiusercontent.com,AI
+  - DOMAIN-SUFFIX,openaiapi-site.azureedge.net,AI
+  - DOMAIN-SUFFIX,openaicom.imgix.net,AI
+  - DOMAIN-SUFFIX,openaicomproductionae4b.blob.core.windows.net,AI
+  - DOMAIN-KEYWORD,openai,AI
+  - DOMAIN-SUFFIX,anthropic.com,AI
+  - DOMAIN-SUFFIX,claude.ai,AI
+  - DOMAIN-SUFFIX,claude.com,AI
+  - DOMAIN-SUFFIX,clau.de,AI
+  - DOMAIN-SUFFIX,claudemcpclient.com,AI
+  - DOMAIN-SUFFIX,claudemcpcontent.com,AI
+  - DOMAIN-SUFFIX,claudeusercontent.com,AI
+  - DOMAIN,servd-anthropic-website.b-cdn.net,AI
+  - DOMAIN,anthropic.com.cdn.cloudflare.net,AI
+  - DOMAIN,anthropic.auth0.com,AI
+  - DOMAIN,anthropic-com.ghost.io,AI
+  - DOMAIN-SUFFIX,sentry.io,AI
+  - DOMAIN-SUFFIX,statsigapi.net,AI
+  - DOMAIN,browser-intake-us5-datadoghq.com,AI
+  - DOMAIN-KEYWORD,datadog,AI
+  - DOMAIN-KEYWORD,sift,AI
+  - DOMAIN-SUFFIX,intercom.io,AI
+  - DOMAIN-SUFFIX,intercomcdn.com,AI
+  - DOMAIN,cdn.usefathom.com,AI
+  - IP-CIDR,160.79.104.0/21,AI,no-resolve
+  - IP-CIDR6,2607:6bc0::/32,AI,no-resolve
+  - IP-ASN,399358,AI,no-resolve
+  - DOMAIN-SUFFIX,windsurf.com,AI
+  - DOMAIN-SUFFIX,gemini.google.com,AI
+  - DOMAIN-SUFFIX,bard.google.com,AI
+  - DOMAIN-SUFFIX,ai.google.dev,AI
+  - DOMAIN-SUFFIX,makersuite.google.com,AI
+  - DOMAIN-SUFFIX,generativelanguage.googleapis.com,AI
+  - DOMAIN-KEYWORD,gemini,AI
+  - DOMAIN-SUFFIX,copilot.microsoft.com,AI
+  - DOMAIN-SUFFIX,bing.com,AI
+  - DOMAIN-SUFFIX,edgeservices.bing.com,AI
+  - DOMAIN-SUFFIX,sydney.bing.com,AI
+  - DOMAIN-KEYWORD,copilot,AI
+  - DOMAIN-SUFFIX,midjourney.com,AI
+  - DOMAIN-SUFFIX,cdn.midjourney.com,AI
+  - DOMAIN-KEYWORD,midjourney,AI
+  - DOMAIN-SUFFIX,stability.ai,AI
+  - DOMAIN-SUFFIX,stabilityai.us,AI
+  - DOMAIN-SUFFIX,dreamstudio.ai,AI
+  - DOMAIN-KEYWORD,stablediffusion,AI
+  - DOMAIN-SUFFIX,perplexity.ai,AI
+  - DOMAIN-KEYWORD,perplexity,AI
+  - DOMAIN-SUFFIX,character.ai,AI
+  - DOMAIN-SUFFIX,characterai.io,AI
+  - DOMAIN-KEYWORD,character.ai,AI
+  - DOMAIN-SUFFIX,poe.com,AI
+  - DOMAIN-KEYWORD,poe.com,AI
+  - DOMAIN-SUFFIX,huggingface.co,AI
+  - DOMAIN-KEYWORD,huggingface,AI
+  - DOMAIN-SUFFIX,notion.so,AI
+  - DOMAIN-SUFFIX,notion.com,AI
+  - DOMAIN-KEYWORD,notion,AI
+  - DOMAIN-SUFFIX,jasper.ai,AI
+  - DOMAIN-KEYWORD,jasper,AI
+  - DOMAIN-SUFFIX,copy.ai,AI
+  - DOMAIN-KEYWORD,copy.ai,AI
+  - DOMAIN-SUFFIX,writesonic.com,AI
+  - DOMAIN-KEYWORD,writesonic,AI
+  - DOMAIN-SUFFIX,runwayml.com,AI
+  - DOMAIN-KEYWORD,runway,AI
+  - DOMAIN-SUFFIX,leonardo.ai,AI
+  - DOMAIN-KEYWORD,leonardo,AI
+  - DOMAIN-SUFFIX,civitai.com,AI
+  - DOMAIN-KEYWORD,civitai,AI
+  - DOMAIN-SUFFIX,deepl.com,AI
+  - DOMAIN-SUFFIX,deepl.net,AI
+  - DOMAIN-KEYWORD,deepl,AI
+  - DOMAIN-SUFFIX,grammarly.com,AI
+  - DOMAIN-SUFFIX,grammarly.io,AI
+  - DOMAIN-KEYWORD,grammarly,AI
+  - DOMAIN-SUFFIX,quillbot.com,AI
+  - DOMAIN-KEYWORD,quillbot,AI
+  - DOMAIN-SUFFIX,replicate.com,AI
+  - DOMAIN-SUFFIX,replicate.delivery,AI
+  - DOMAIN-KEYWORD,replicate,AI
+  - DOMAIN-SUFFIX,cohere.ai,AI
+  - DOMAIN-SUFFIX,cohere.com,AI
+  - DOMAIN-KEYWORD,cohere,AI
+  - DOMAIN-SUFFIX,ai21.com,AI
+  - DOMAIN-KEYWORD,ai21,AI
+  - DOMAIN-SUFFIX,you.com,AI
+  - DOMAIN-KEYWORD,you.com,AI
+  - DOMAIN-SUFFIX,phind.com,AI
+  - DOMAIN-KEYWORD,phind,AI
+  - DOMAIN-SUFFIX,cursor.sh,AI
+  - DOMAIN-SUFFIX,cursor.com,AI
+  - DOMAIN-KEYWORD,cursor,AI
+  - DOMAIN-SUFFIX,copilot.github.com,AI
+  - DOMAIN-SUFFIX,githubcopilot.com,AI
+  - DOMAIN-KEYWORD,github.copilot,AI
+  - DOMAIN-SUFFIX,codeium.com,AI
+  - DOMAIN-KEYWORD,codeium,AI
+  - DOMAIN-SUFFIX,tabnine.com,AI
+  - DOMAIN-KEYWORD,tabnine,AI
+  - DOMAIN-SUFFIX,replit.com,AI
+  - DOMAIN-KEYWORD,replit,AI
+  - DOMAIN-SUFFIX,vercel.ai,AI
+  - DOMAIN-SUFFIX,sdk.vercel.ai,AI
+  - DOMAIN-KEYWORD,vercel.ai,AI
+  - DOMAIN-SUFFIX,elevenlabs.io,AI
+  - DOMAIN-SUFFIX,elevenlabs.com,AI
+  - DOMAIN-KEYWORD,elevenlabs,AI
+  - DOMAIN-SUFFIX,synthesia.io,AI
+  - DOMAIN-KEYWORD,synthesia,AI
+  - DOMAIN-SUFFIX,d-id.com,AI
+  - DOMAIN-KEYWORD,d-id,AI
+  - DOMAIN-SUFFIX,lumalabs.ai,AI
+  - DOMAIN-KEYWORD,luma,AI
+  - DOMAIN-SUFFIX,suno.ai,AI
+  - DOMAIN-SUFFIX,suno.com,AI
+  - DOMAIN-KEYWORD,suno,AI
+  - DOMAIN-SUFFIX,udio.com,AI
+  - DOMAIN-KEYWORD,udio,AI
+  - DOMAIN-SUFFIX,recraft.ai,AI
+  - DOMAIN-KEYWORD,recraft,AI
+  - DOMAIN-SUFFIX,ideogram.ai,AI
+  - DOMAIN-KEYWORD,ideogram,AI
+  - DOMAIN-SUFFIX,flux.ai,AI
+  - DOMAIN-KEYWORD,flux.ai,AI
+  - DOMAIN-SUFFIX,meta.ai,AI
+  - DOMAIN-KEYWORD,meta.ai,AI
+  - DOMAIN-SUFFIX,mistral.ai,AI
+  - DOMAIN-SUFFIX,chat.mistral.ai,AI
+  - DOMAIN-KEYWORD,mistral,AI
+  - DOMAIN-SUFFIX,inflection.ai,AI
+  - DOMAIN-SUFFIX,pi.ai,AI
+  - DOMAIN-KEYWORD,inflection,AI
+  - DOMAIN-SUFFIX,console.anthropic.com,AI
+  - DOMAIN-KEYWORD,anthropic.console,AI
+  - DOMAIN-SUFFIX,openrouter.ai,AI
+  - DOMAIN-KEYWORD,openrouter,AI
+  - DOMAIN-SUFFIX,together.ai,AI
+  - DOMAIN-SUFFIX,together.xyz,AI
+  - DOMAIN-KEYWORD,together.ai,AI
+  - DOMAIN-SUFFIX,fireworks.ai,AI
+  - DOMAIN-KEYWORD,fireworks.ai,AI
+  - DOMAIN-SUFFIX,groq.com,AI
+  - DOMAIN-KEYWORD,groq,AI
+  - DOMAIN-SUFFIX,anyscale.com,AI
+  - DOMAIN-KEYWORD,anyscale,AI
+  - DOMAIN-SUFFIX,baseten.co,AI
+  - DOMAIN-KEYWORD,baseten,AI
+  - DOMAIN-SUFFIX,modal.com,AI
+  - DOMAIN-KEYWORD,modal.com,AI
+  - DOMAIN-SUFFIX,api.replicate.com,AI
+  - DOMAIN-KEYWORD,replicate.api,AI
+
+  # ---------- TikTok（TikTok，共 31 条）----------
+  - DOMAIN,lf16-effectcdn.byteeffecttos-g.com,TikTok
+  - DOMAIN,lf16-pkgcdn.pitaya-clientai.com,TikTok
+  - DOMAIN,p16-tiktokcdn-com.akamaized.net,TikTok
+  - DOMAIN,trae-api-sg.mchost.guru,TikTok
+  - DOMAIN-SUFFIX,bytedapm.com,TikTok
+  - DOMAIN-SUFFIX,bytegecko-i18n.com,TikTok
+  - DOMAIN-SUFFIX,byteintlapi.com,TikTok
+  - DOMAIN-SUFFIX,byteoversea.com,TikTok
+  - DOMAIN-SUFFIX,capcut.com,TikTok
+  - DOMAIN-SUFFIX,ibytedtos.com,TikTok
+  - DOMAIN-SUFFIX,ibyteimg.com,TikTok
+  - DOMAIN-SUFFIX,ipstatp.com,TikTok
+  - DOMAIN-SUFFIX,isnssdk.com,TikTok
+  - DOMAIN-SUFFIX,marscode.com,TikTok
+  - DOMAIN-SUFFIX,muscdn.com,TikTok
+  - DOMAIN-SUFFIX,musical.ly,TikTok
+  - DOMAIN-SUFFIX,sgpstatp.com,TikTok
+  - DOMAIN-SUFFIX,snssdk.com,TikTok
+  - DOMAIN-SUFFIX,tik-tokapi.com,TikTok
+  - DOMAIN-SUFFIX,tiktok.com,TikTok
+  - DOMAIN-SUFFIX,tiktokcdn-us.com,TikTok
+  - DOMAIN-SUFFIX,tiktokcdn.com,TikTok
+  - DOMAIN-SUFFIX,tiktokd.net,TikTok
+  - DOMAIN-SUFFIX,tiktokd.org,TikTok
+  - DOMAIN-SUFFIX,tiktokmusic.app,TikTok
+  - DOMAIN-SUFFIX,tiktokv.com,TikTok
+  - DOMAIN-SUFFIX,tiktokv.us,TikTok
+  - DOMAIN-SUFFIX,trae.ai,TikTok
+  - DOMAIN-SUFFIX,ttwebview.com,TikTok
+  - DOMAIN-KEYWORD,musical.ly,TikTok
+  - DOMAIN-KEYWORD,tiktok,TikTok
+
+  # ---------- 社交媒体（社交媒体，共 117 条）----------
+  - DOMAIN-SUFFIX,ads-twitter.com,社交媒体
+  - DOMAIN-SUFFIX,cms-twdigitalassets.com,社交媒体
+  - DOMAIN-SUFFIX,grok.com,社交媒体
+  - DOMAIN-SUFFIX,periscope.tv,社交媒体
+  - DOMAIN-SUFFIX,pscp.tv,社交媒体
+  - DOMAIN-SUFFIX,t.co,社交媒体
+  - DOMAIN-SUFFIX,tellapart.com,社交媒体
+  - DOMAIN-SUFFIX,tweetdeck.com,社交媒体
+  - DOMAIN-SUFFIX,twimg.co,社交媒体
+  - DOMAIN-SUFFIX,twimg.com,社交媒体
+  - DOMAIN-SUFFIX,twimg.org,社交媒体
+  - DOMAIN-SUFFIX,twitpic.com,社交媒体
+  - DOMAIN-SUFFIX,twitter.biz,社交媒体
+  - DOMAIN-SUFFIX,twitter.com,社交媒体
+  - DOMAIN-SUFFIX,twitter.jp,社交媒体
+  - DOMAIN-SUFFIX,twittercommunity.com,社交媒体
+  - DOMAIN-SUFFIX,twitterflightschool.com,社交媒体
+  - DOMAIN-SUFFIX,twitterinc.com,社交媒体
+  - DOMAIN-SUFFIX,twitteroauth.com,社交媒体
+  - DOMAIN-SUFFIX,twitterstat.us,社交媒体
+  - DOMAIN-SUFFIX,twtrdns.net,社交媒体
+  - DOMAIN-SUFFIX,twttr.com,社交媒体
+  - DOMAIN-SUFFIX,twttr.net,社交媒体
+  - DOMAIN-SUFFIX,twvid.com,社交媒体
+  - DOMAIN-SUFFIX,vine.co,社交媒体
+  - DOMAIN-SUFFIX,x.com,社交媒体
+  - DOMAIN-KEYWORD,twitter,社交媒体
+  - IP-CIDR,192.133.76.0/22,社交媒体,no-resolve
+  - IP-CIDR,199.59.148.0/22,社交媒体,no-resolve
+  - IP-CIDR,199.96.56.0/21,社交媒体,no-resolve
+  - IP-CIDR,202.160.128.0/22,社交媒体,no-resolve
+  - IP-CIDR,209.237.192.0/19,社交媒体,no-resolve
+  - IP-CIDR,69.195.160.0/19,社交媒体,no-resolve
+  - DOMAIN-SUFFIX,cdninstagram.com,社交媒体
+  - DOMAIN-SUFFIX,instagr.am,社交媒体
+  - DOMAIN-SUFFIX,instagram.com,社交媒体
+  - DOMAIN-KEYWORD,instagram,社交媒体
+  - DOMAIN-SUFFIX,facebook.com,社交媒体
+  - DOMAIN-SUFFIX,facebook.net,社交媒体
+  - DOMAIN-SUFFIX,fb.com,社交媒体
+  - DOMAIN-SUFFIX,fb.me,社交媒体
+  - DOMAIN-SUFFIX,fbcdn.com,社交媒体
+  - DOMAIN-SUFFIX,fbcdn.net,社交媒体
+  - DOMAIN-SUFFIX,fbsbx.com,社交媒体
+  - DOMAIN-SUFFIX,messenger.com,社交媒体
+  - DOMAIN-SUFFIX,whatsapp.com,社交媒体
+  - DOMAIN-SUFFIX,whatsapp.net,社交媒体
+  - DOMAIN-KEYWORD,facebook,社交媒体
+  - DOMAIN-KEYWORD,fbcdn,社交媒体
+  - IP-CIDR,31.13.24.0/21,社交媒体,no-resolve
+  - IP-CIDR,31.13.64.0/18,社交媒体,no-resolve
+  - IP-CIDR,66.220.144.0/20,社交媒体,no-resolve
+  - IP-CIDR,69.63.176.0/20,社交媒体,no-resolve
+  - IP-CIDR,69.171.224.0/19,社交媒体,no-resolve
+  - IP-CIDR,74.119.76.0/22,社交媒体,no-resolve
+  - IP-CIDR,103.4.96.0/22,社交媒体,no-resolve
+  - IP-CIDR,157.240.0.0/17,社交媒体,no-resolve
+  - IP-CIDR,173.252.64.0/18,社交媒体,no-resolve
+  - IP-CIDR,179.60.192.0/22,社交媒体,no-resolve
+  - IP-CIDR,185.60.216.0/22,社交媒体,no-resolve
+  - IP-CIDR,204.15.20.0/22,社交媒体,no-resolve
+  - DOMAIN,api.imem.app,社交媒体
+  - DOMAIN,api.swiftgram.app,社交媒体
+  - DOMAIN-SUFFIX,cdn-telegram.org,社交媒体
+  - DOMAIN-SUFFIX,comments.app,社交媒体
+  - DOMAIN-SUFFIX,contest.com,社交媒体
+  - DOMAIN-SUFFIX,graph.org,社交媒体
+  - DOMAIN-SUFFIX,legra.ph,社交媒体
+  - DOMAIN-SUFFIX,mbrx.app,社交媒体
+  - DOMAIN-SUFFIX,quiz.directory,社交媒体
+  - DOMAIN-SUFFIX,stel.com,社交媒体
+  - DOMAIN-SUFFIX,t.me,社交媒体
+  - DOMAIN-SUFFIX,tdesktop.com,社交媒体
+  - DOMAIN-SUFFIX,telega.one,社交媒体
+  - DOMAIN-SUFFIX,telegra.ph,社交媒体
+  - DOMAIN-SUFFIX,telegram-cdn.org,社交媒体
+  - DOMAIN-SUFFIX,telegram.dog,社交媒体
+  - DOMAIN-SUFFIX,telegram.me,社交媒体
+  - DOMAIN-SUFFIX,telegram.org,社交媒体
+  - DOMAIN-SUFFIX,telegram.space,社交媒体
+  - DOMAIN-SUFFIX,telegramdownload.com,社交媒体
+  - DOMAIN-SUFFIX,telesco.pe,社交媒体
+  - DOMAIN-SUFFIX,tg.dev,社交媒体
+  - DOMAIN-SUFFIX,tx.me,社交媒体
+  - DOMAIN-SUFFIX,usercontent.dev,社交媒体
+  - DOMAIN-KEYWORD,nicegram,社交媒体
+  - IP-CIDR,91.108.4.0/22,社交媒体,no-resolve
+  - IP-CIDR,91.108.8.0/22,社交媒体,no-resolve
+  - IP-CIDR,91.108.12.0/22,社交媒体,no-resolve
+  - IP-CIDR,91.108.16.0/22,社交媒体,no-resolve
+  - IP-CIDR,91.108.56.0/22,社交媒体,no-resolve
+  - IP-CIDR,109.239.140.0/24,社交媒体,no-resolve
+  - IP-CIDR,149.154.160.0/20,社交媒体,no-resolve
+  - IP-CIDR,185.76.151.0/24,社交媒体,no-resolve
+  - IP-CIDR6,2001:b28:f23d::/48,社交媒体,no-resolve
+  - IP-CIDR6,2001:b28:f23f::/48,社交媒体,no-resolve
+  - IP-CIDR6,2001:67c:4e8::/48,社交媒体,no-resolve
+  - IP-CIDR6,2a0a:f280::/29,社交媒体,no-resolve
+  - DOMAIN-SUFFIX,reddit.com,社交媒体
+  - DOMAIN-SUFFIX,redd.it,社交媒体
+  - DOMAIN-SUFFIX,redditstatic.com,社交媒体
+  - DOMAIN-SUFFIX,redditmedia.com,社交媒体
+  - DOMAIN-KEYWORD,reddit,社交媒体
+  - DOMAIN-SUFFIX,discord.com,社交媒体
+  - DOMAIN-SUFFIX,discord.gg,社交媒体
+  - DOMAIN-SUFFIX,discordapp.com,社交媒体
+  - DOMAIN-SUFFIX,discordapp.net,社交媒体
+  - DOMAIN-KEYWORD,discord,社交媒体
+  - DOMAIN-SUFFIX,linkedin.com,社交媒体
+  - DOMAIN-SUFFIX,licdn.com,社交媒体
+  - DOMAIN-KEYWORD,linkedin,社交媒体
+  - DOMAIN-SUFFIX,pinterest.com,社交媒体
+  - DOMAIN-SUFFIX,pinimg.com,社交媒体
+  - DOMAIN-KEYWORD,pinterest,社交媒体
+  - DOMAIN-SUFFIX,snapchat.com,社交媒体
+  - DOMAIN-SUFFIX,sc-cdn.net,社交媒体
+  - DOMAIN-KEYWORD,snapchat,社交媒体
+
+  # 兜底
   - GEOIP,LAN,DIRECT,no-resolve
   - GEOIP,CN,DIRECT
   - MATCH,PROXY
