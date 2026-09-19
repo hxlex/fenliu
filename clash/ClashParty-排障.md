@@ -52,8 +52,8 @@ mihomo 需要 **uTLS v1.8.7+** 才真正支持 ML-KEM。ClashParty 太旧的话�
 
 ## 配置里另外 4 个隐患（顺手一并修了）
 
-### 1. `rule-providers` 从 `raw.githubusercontent.com` 下载（最可能的原因）
-内核启动时会**先下载全部 7 个规则集**才开始工作，这个下载是**直连**的（此时代理还没起来）。
+### 1. `rule-providers` 从 `raw.githubusercontent.com` 下载
+（不是本次的根因，但迟早会踩）内核启动时会**先下载全部 7 个规则集**才开始工作，这个下载是**直连**的（此时代理还没起来）。
 `raw.githubusercontent.com` 在国内基本连不上，于是内核卡在加载阶段 → GUI 显示超时 / profile 加载失败。
 
 **修复**：`windows` 改成把 615 条规则**全部内联**，启动零网络依赖。
