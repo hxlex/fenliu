@@ -1,0 +1,4 @@
+# 含真实节点信息的配置，绝不提交到公开仓库
+windows
+windows-ruleset.yaml
+*.local.yaml

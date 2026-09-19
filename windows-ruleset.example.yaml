@@ -1,6 +1,17 @@
 # ClashParty / mihomo 完整配置（规则集在线订阅版）
 # 规则走 jsDelivr 镜像，国内可直连；若 jsDelivr 不通请改用 windows（自包含版）
 # 来源规则：https://github.com/hxlex/fenliu
+#
+# ⚠️ 这是模板。使用前请把下面 5 个占位符替换成你自己的值
+#    （在 3x-ui 面板点节点的「二维码 / 分享链接」即可拿到）：
+#
+#      YOUR_SERVER_DOMAIN      ← 服务器域名
+#      YOUR_UUID               ← id
+#      YOUR_REALITY_PUBLIC_KEY ← pbk
+#      YOUR_SHORT_ID           ← sid
+#      www.amazon.com          ← sni（servername）
+#
+#    填好后另存为本地文件，不要提交回这个公开仓库。
 
 mixed-port: 7890
 allow-lan: false
@@ -33,7 +44,7 @@ sniffer:
     QUIC:
       ports: [443, 8443]
   skip-domain:
-    - '+.139876.xyz'
+    - '+.YOUR_SERVER_DOMAIN'
 
 dns:
   enable: true
@@ -44,7 +55,7 @@ dns:
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
-    - '+.139876.xyz'          # 节点域名，必须排除
+    - '+.YOUR_SERVER_DOMAIN'          # 节点域名，必须排除
     - '*.lan'
     - '*.localdomain'
     - '+.local'
@@ -67,11 +78,11 @@ dns:
     - 119.29.29.29
 
 proxies:
-  - name: "US-liuliu"
+  - name: "MyNode"
     type: vless
-    server: liuliu.139876.xyz
+    server: YOUR_SERVER_DOMAIN
     port: 443
-    uuid: df18c0e9-2921-4fcb-ab00-ebaa9ad10964
+    uuid: YOUR_UUID
     network: tcp
     udp: true
     tls: true
@@ -79,8 +90,8 @@ proxies:
     servername: www.amazon.com
     client-fingerprint: chrome
     reality-opts:
-      public-key: nny5II0rMQ9415y98-tW_Y4WsUvpjVvBb8Erf2HTIRI
-      short-id: 2ef637dcea
+      public-key: YOUR_REALITY_PUBLIC_KEY
+      short-id: YOUR_SHORT_ID
       # Xray-core v26.9.8+ 要求 ClientHello 带 X25519MLKEM768 key share，
       # 否则握手被静默丢给 fallback，客户端表现为超时。
       # 3x-ui 的 Clash 订阅会自动加这行，手写 yaml 必须自己补上。
@@ -91,25 +102,25 @@ proxy-groups:
     type: select
     proxies:
       - 自动选择
-      - "US-liuliu"
+      - "MyNode"
       - DIRECT
   - name: AI
     type: select
     proxies:
       - PROXY
-      - "US-liuliu"
+      - "MyNode"
       - DIRECT
   - name: TikTok
     type: select
     proxies:
       - PROXY
-      - "US-liuliu"
+      - "MyNode"
       - DIRECT
   - name: 社交媒体
     type: select
     proxies:
       - PROXY
-      - "US-liuliu"
+      - "MyNode"
       - DIRECT
   - name: 自动选择
     type: url-test
@@ -119,7 +130,7 @@ proxy-groups:
     timeout: 5000
     lazy: true
     proxies:
-      - "US-liuliu"
+      - "MyNode"
 
 rule-providers:
   chuguo:
@@ -181,7 +192,7 @@ rule-providers:
 
 rules:
   # 节点域名直连，防止回环
-  - DOMAIN-SUFFIX,139876.xyz,DIRECT
+  - DOMAIN-SUFFIX,YOUR_SERVER_DOMAIN,DIRECT
   # 规则集下载域名直连
   - DOMAIN-SUFFIX,jsdelivr.net,DIRECT
   - DOMAIN-SUFFIX,githubusercontent.com,PROXY
